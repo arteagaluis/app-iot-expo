@@ -1,98 +1,107 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useAuthStore } from '@/src/stores/auth-store';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
+import * as Haptics from 'expo-haptics';
+import React, { useState } from 'react';
+import { FadeInDown, LinearTransition } from 'react-native-reanimated';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const DEVICES = [
+  { id: '1', name: 'Living Room Light', type: 'light', room: 'Living Room', status: 'On', value: 80 },
+  { id: '2', name: 'Air Conditioner', type: 'temp', room: 'Bedroom', status: 'Off', value: 24, unit: '°C' },
+  { id: '3', name: 'Smart Lock', type: 'lock', room: 'Front Door', status: 'Locked' },
+  { id: '4', name: 'Humidifier', type: 'humid', room: 'Office', status: 'On', value: 45, unit: '%' },
+  { id: '5', name: 'TV Backlight', type: 'light', room: 'Living Room', status: 'Off', value: 0 },
+  { id: '6', name: 'Studio Speakers', type: 'audio', room: 'Office', status: 'On', value: 20, unit: '%' },
+];
 
-export default function HomeScreen() {
+export default function Dashboard() {
+  const { user } = useAuthStore();
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+
+  const renderBadge = (type: string) => {
+    switch (type) {
+      case 'light': return <Text className="bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full text-xs font-semibold">Light</Text>;
+      case 'temp': return <Text className="bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded-full text-xs font-semibold">Temp</Text>;
+      case 'lock': return <Text className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full text-xs font-semibold">Lock</Text>;
+      default: return <Text className="bg-gray-500/20 text-gray-500 px-2 py-0.5 rounded-full text-xs font-semibold">Device</Text>;
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ScrollView
+      className="flex-1 bg-black"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="p-6 gap-8 pb-32"
+    >
+      <View>
+        <Text className="text-gray-400 text-lg font-medium">Welcome back,</Text>
+        <Text className="text-white text-4xl font-bold tracking-tight">{user?.name || 'Home'}</Text>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <View className="flex-row gap-4">
+        <View className="flex-1 bg-gray-900/50 p-5 rounded-3xl" style={{ borderCurve: 'continuous' }}>
+          <Text className="text-gray-500 text-sm font-semibold uppercase">Indoor Temp</Text>
+          <Text className="text-white text-3xl font-bold mt-1">22.4°C</Text>
+        </View>
+        <View className="flex-1 bg-gray-900/50 p-5 rounded-3xl" style={{ borderCurve: 'continuous' }}>
+          <Text className="text-gray-500 text-sm font-semibold uppercase">Humidity</Text>
+          <Text className="text-white text-3xl font-bold mt-1">42%</Text>
+        </View>
+      </View>
+
+      <View className="gap-4">
+        <View className="flex-row justify-between items-center px-1">
+          <Text className="text-white text-2xl font-bold">Your Devices</Text>
+          <Pressable>
+            <Text className="text-iot-primary font-semibold">Add New</Text>
+          </Pressable>
+        </View>
+
+        <View className="flex-row flex-wrap gap-4">
+          {DEVICES.map((device, index) => (
+            <Animated.View
+              layout={LinearTransition}
+              entering={FadeInDown.delay(index * 100).duration(800).springify()}
+              key={device.id}
+              className="w-[47%]"
+            >
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedDevice(device.id === selectedDevice ? null : device.id);
+                }}
+                className={`p-5 rounded-3xl border ${device.status === 'On' || device.status === 'Locked' ? 'bg-iot-primary/10 border-iot-primary/30' : 'bg-gray-900/40 border-gray-800/30'}`}
+                style={{ borderCurve: 'continuous', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}
+              >
+                <View className="flex-row justify-between mb-4">
+                  {renderBadge(device.type)}
+                  <View className={`w-3 h-3 rounded-full ${device.status === 'On' || device.status === 'Locked' ? 'bg-iot-primary shadow-[0_0_10px_#007AFF]' : 'bg-gray-700'}`} />
+                </View>
+
+                <Text className="text-white font-bold text-lg leading-tight" numberOfLines={1}>{device.name}</Text>
+                <Text className="text-gray-500 text-sm mt-1">{device.room}</Text>
+
+                <View className="mt-4 flex-row items-baseline gap-1">
+                  <Text className={`text-xl font-bold ${device.status === 'On' || device.status === 'Locked' ? 'text-white' : 'text-gray-600'}`}>
+                    {device.value ?? device.status}
+                  </Text>
+                  {device.unit && <Text className="text-gray-600 text-sm font-medium">{device.unit}</Text>}
+                </View>
+              </Pressable>
+            </Animated.View>
+          ))}
+        </View>
+      </View>
+
+      <View className="mt-4 bg-iot-primary p-6 rounded-[40px] flex-row items-center justify-between" style={{ borderCurve: 'continuous' }}>
+        <View className="gap-1">
+          <Text className="text-white/80 font-bold uppercase text-xs tracking-widest">Energy Usage</Text>
+          <Text className="text-white text-2xl font-black">1.4 kW/h</Text>
+        </View>
+        <View className="bg-black/10 px-4 py-2 rounded-2xl">
+          <Text className="text-white font-bold">Details</Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});

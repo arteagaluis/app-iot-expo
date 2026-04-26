@@ -1,24 +1,53 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { useAuthStore } from '@/src/stores/auth-store';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect } from 'react';
+import '../src/global.css';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+WebBrowser.maybeCompleteAuthSession();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    initialize();
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    // On Web, if we are in a popup (window.opener exists), 
+    // we don't want to perform any redirection logic.
+    // WebBrowser.maybeCompleteAuthSession() will handle closing this window.
+    if (typeof window !== 'undefined' && window.opener && window.opener !== window) {
+      return;
+    }
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!isAuthenticated && !inAuthGroup) {
+      // Redirect to login if not authenticated
+      router.replace('/(auth)/login');
+    } else if (isAuthenticated && inAuthGroup) {
+      // Redirect to dashboard if authenticated
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, isLoading, segments]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
+        <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
       <StatusBar style="auto" />
-    </ThemeProvider>
+    </QueryClientProvider>
   );
 }

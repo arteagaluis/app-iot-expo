@@ -1,15 +1,31 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Learn more at https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
+# =========================================
+# Dependencias
+# =========================================
 node_modules/
+.pnp
+.pnp.js
 
-# Expo
+# =========================================
+# Expo & React Native
+# =========================================
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Compilaciones y apps nativas generadas
+/ios
+/android
+*.apk
+*.aab
+*.ipa
+*.app
+
+# =========================================
+# Archivos Nativos y Certificados (Privados)
+# =========================================
 .kotlin/
 *.orig.*
 *.jks
@@ -17,27 +33,100 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
 *.pem
+*.keystore
+*.cer
 
-# local env files
-.env*.local
-
-# typescript
+# =========================================
+# Metro, Cachés y Build Info
+# =========================================
+.metro-health-check*
+.eslintcache
+.stylelintcache
 *.tsbuildinfo
 
+# =========================================
+# Testing
+# =========================================
+/coverage
+/.nyc_output
+
+# =========================================
+# Variables de Entorno (Secretos)
+# =========================================
+.env
+.env.*
+!.env.example
+!.env.template
+
+# =========================================
+# Debug y Logs
+# =========================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# =========================================
+# Sistema Operativo
+# =========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# =========================================
+# Editores e IDEs
+# =========================================
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+.history/
+
+# =========================================
+# Otros
+# =========================================
 app-example
 
-# generated native folders
-/ios
-/android
+# Dependencias / Herramientas de IA y Agentes
+.agents/
+.agent/
+_agents/
+_agent/
+.gemini/
+skills-lock.json
+
+# =========================================
+# EAS Build & Updates
+# =========================================
+*.tar.gz
+*.tar.xz
+eas-build-*.log
+credentials.json
+local.properties
+
+# =========================================
+# CocoaPods
+# =========================================
+Pods/
+Podfile.lock
+
+# =========================================
+# Node & Package Managers
+# =========================================
+.pnpm-store/
+pnpm-debug.log*
+
+# =========================================
+# E2E Testing & Artifacts
+# =========================================
+artifacts/
