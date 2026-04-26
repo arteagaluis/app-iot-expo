@@ -20,8 +20,11 @@ RUN npm ci || pnpm install --frozen-lockfile || yarn install --frozen-lockfile
 COPY . .
 
 # Argumentos de entorno para la construcción (API URL, etc.)
-# Ejemplo: ARG EXPO_PUBLIC_API_URL
-# ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
+ARG EXPO_PUBLIC_API_URL
+ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
+
+ARG EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB
+ENV EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB=$EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB
 
 # Construir la aplicación web estática
 RUN npx expo export -p web
@@ -32,13 +35,13 @@ RUN npx expo export -p web
 FROM nginx:alpine AS runner
 
 # Copiar la configuración personalizada de Nginx si es necesario para SPA routing
-# (Por defecto, Nginx sirve estáticos, pero las SPA necesitan redirigir rutas al index.html)
+# (Se usa try_files $uri $uri.html para soportar la salida 'static' de Expo Router)
 RUN echo "server { \
     listen 80; \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
-        try_files \$uri \$uri/ /index.html; \
+        try_files \$uri \$uri.html \$uri/ /index.html; \
     } \
 }" > /etc/nginx/conf.d/default.conf
 
