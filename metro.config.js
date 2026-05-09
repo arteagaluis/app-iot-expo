@@ -6,7 +6,7 @@ const config = getDefaultConfig(__dirname);
 
 // Fix for socket.io-client and engine.io-client on React Native / Web
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName.endsWith('.node.js')) {
+  if (platform !== 'web' && moduleName.endsWith('.node.js')) {
     return {
       type: 'empty',
     };
