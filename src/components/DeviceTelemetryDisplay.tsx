@@ -5,7 +5,8 @@ import { Text, View } from '@/src/tw';
 export const DeviceTelemetryDisplay = ({ deviceId }: { deviceId: string }) => {
   const { data: telemetry } = useQuery({
     queryKey: ['telemetry', deviceId],
-    // No hacemos fetch HTTP, solo esperamos que el socket alimente esta queryKey
+    // Dummy queryFn para TanStack v5. Los datos reales llegarán vía Socket (queryClient.setQueryData)
+    queryFn: () => null,
     staleTime: Infinity,
   });
 

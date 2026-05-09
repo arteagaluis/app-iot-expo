@@ -37,10 +37,12 @@ export const useDeviceSocket = () => {
       });
     });
 
-    socket.on('device:telemetry', (payload: { mac: string; data: any }) => {
+    socket.on('device:telemetry', (payload: { deviceId?: string; mac?: string; data: any }) => {
       console.log('Telemetría recibida vía socket:', payload);
-      // Podríamos guardar la telemetría en otra key de query, ej: ['telemetry', payload.mac]
-      queryClient.setQueryData(['telemetry', payload.mac], payload.data);
+      const targetId = payload.deviceId || payload.mac;
+      if (targetId) {
+        queryClient.setQueryData(['telemetry', targetId], payload.data);
+      }
     });
 
     return () => {
