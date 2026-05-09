@@ -46,8 +46,8 @@ export default function ProfileScreen() {
           className="w-32 h-32 rounded-full border-4 border-iot-primary/20"
           style={{ boxShadow: '0 10px 40px rgba(0, 122, 255, 0.2)' }}
         />
-        <Text className="text-white text-3xl font-bold mt-6 tracking-tight">{user?.name}</Text>
-        <Text className="text-gray-500 text-lg font-medium">{user?.email}</Text>
+        <Text selectable className="text-white text-3xl font-bold mt-6 tracking-tight">{user?.name}</Text>
+        <Text selectable className="text-gray-500 text-lg font-medium">{user?.email}</Text>
       </Animated.View>
 
       <View className="gap-4">
