@@ -118,7 +118,8 @@ const DeviceItem = memo(({ device, isSelected, toggleDeviceSelection, confirmDel
   return prevProps.isSelected === nextProps.isSelected 
     && prevProps.device === nextProps.device
     && prevProps.isDeleting === nextProps.isDeleting
-    && prevProps.isSharing === nextProps.isSharing;
+    && prevProps.isSharing === nextProps.isSharing
+    && prevProps.handleShare === nextProps.handleShare;
 });
 DeviceItem.displayName = 'DeviceItem';
 

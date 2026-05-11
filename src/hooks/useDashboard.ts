@@ -6,7 +6,7 @@ import { useMutation, UseMutationResult, useQuery, useQueryClient } from '@tanst
 import { AxiosError } from 'axios';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActionSheetIOS, Alert, Platform } from 'react-native';
 
 interface UseDashboardReturn {
@@ -162,62 +162,42 @@ export const useDashboard = (): UseDashboardReturn => {
     );
   };
 
-  const handleShare = (id: string, name: string) => {
-    if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleShare = useCallback((id: string, name: string) => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
 
-    const navigateToManager = () =>
-      router.push(`/device/${id}/share-manager`);
-
-    const promptNewShare = () => {
-      if (Platform.OS === 'web') {
-        const email = window.prompt(`Ingresa el email del usuario para compartir ${name}:`);
-        if (email?.trim()) shareMutation.mutate({ id, email: email.trim() });
-        return;
-      }
-      Alert.prompt(
-        'Compartir dispositivo',
-        `Ingresa el email del usuario al que quieres dar acceso a "${name}":`,
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Compartir',
-            onPress: (email?: string) => {
-              if (email?.trim()) shareMutation.mutate({ id, email: email.trim() });
-            },
-          },
-        ],
-        'plain-text'
-      );
+    const openManager = () => {
+      // Usamos encodeURIComponent por si el ID tiene caracteres como ':'
+      router.push(`/device/${encodeURIComponent(id)}/share-manager`);
     };
 
-    // iOS: native action sheet for best UX
+    // Si es iOS, mostramos el ActionSheet nativo
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
           title: name,
-          message: '¿Qué deseas hacer?',
-          options: ['Cancelar', 'Compartir con alguien', 'Ver usuarios con acceso'],
+          message: 'Gestión de acceso compartido',
+          options: ['Cancelar', 'Gestionar usuarios y compartir'],
           cancelButtonIndex: 0,
         },
         (buttonIndex) => {
-          if (buttonIndex === 1) promptNewShare();
-          if (buttonIndex === 2) navigateToManager();
+          if (buttonIndex === 1) openManager();
         }
       );
       return;
     }
 
-    // Android / Web: Alert with buttons
+    // Android / Web: Alerta simple para navegar
     Alert.alert(
       name,
-      '¿Qué deseas hacer?',
+      '¿Deseas gestionar el acceso de este dispositivo?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Compartir con alguien', onPress: promptNewShare },
-        { text: 'Ver usuarios con acceso', onPress: navigateToManager },
+        { text: 'Gestionar acceso', onPress: openManager },
       ]
     );
-  };
+  }, [router]);
 
   const toggleDeviceSelection = (deviceId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
