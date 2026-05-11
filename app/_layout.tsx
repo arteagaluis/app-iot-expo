@@ -46,6 +46,14 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="device/[deviceId]/share-manager"
+          options={{
+            presentation: 'modal',
+            headerShown: true,
+            animation: 'slide_from_bottom',
+          }}
+        />
       </Stack>
       <StatusBar style="light" />
     </QueryClientProvider>

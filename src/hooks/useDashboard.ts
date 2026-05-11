@@ -5,8 +5,9 @@ import { ApiError, Device } from '@/src/types/device';
 import { useMutation, UseMutationResult, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { ActionSheetIOS, Alert, Platform } from 'react-native';
 
 interface UseDashboardReturn {
   user: any; // Ideally we type User in auth-store too
@@ -26,6 +27,7 @@ export const useDashboard = (): UseDashboardReturn => {
   const { user } = useAuthStore();
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Iniciar la conexión en tiempo real
   useDeviceSocket();
@@ -161,30 +163,59 @@ export const useDashboard = (): UseDashboardReturn => {
   };
 
   const handleShare = (id: string, name: string) => {
-    if (Platform.OS === 'web') {
-      const email = window.prompt(`Enter the email of the user to share ${name} with:`);
-      if (email && email.trim() !== '') {
-        shareMutation.mutate({ id, email: email.trim() });
+    if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    const navigateToManager = () =>
+      router.push(`/device/${id}/share-manager`);
+
+    const promptNewShare = () => {
+      if (Platform.OS === 'web') {
+        const email = window.prompt(`Ingresa el email del usuario para compartir ${name}:`);
+        if (email?.trim()) shareMutation.mutate({ id, email: email.trim() });
+        return;
       }
+      Alert.prompt(
+        'Compartir dispositivo',
+        `Ingresa el email del usuario al que quieres dar acceso a "${name}":`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Compartir',
+            onPress: (email?: string) => {
+              if (email?.trim()) shareMutation.mutate({ id, email: email.trim() });
+            },
+          },
+        ],
+        'plain-text'
+      );
+    };
+
+    // iOS: native action sheet for best UX
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: name,
+          message: '¿Qué deseas hacer?',
+          options: ['Cancelar', 'Compartir con alguien', 'Ver usuarios con acceso'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) promptNewShare();
+          if (buttonIndex === 2) navigateToManager();
+        }
+      );
       return;
     }
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.prompt(
-      'Share Device',
-      `Enter the email of the user to share ${name} with:`,
+    // Android / Web: Alert with buttons
+    Alert.alert(
+      name,
+      '¿Qué deseas hacer?',
       [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Share',
-          onPress: (email?: string) => {
-            if (email && email.trim() !== '') {
-              shareMutation.mutate({ id, email: email.trim() });
-            }
-          },
-        },
-      ],
-      'plain-text'
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Compartir con alguien', onPress: promptNewShare },
+        { text: 'Ver usuarios con acceso', onPress: navigateToManager },
+      ]
     );
   };
 
