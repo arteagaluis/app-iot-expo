@@ -49,9 +49,12 @@ export default function RootLayout() {
         <Stack.Screen
           name="device/[deviceId]/share-manager"
           options={{
-            presentation: 'modal',
+            presentation: 'formSheet',
             headerShown: true,
             animation: 'slide_from_bottom',
+            headerStyle: { backgroundColor: '#000' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: '700' },
           }}
         />
       </Stack>

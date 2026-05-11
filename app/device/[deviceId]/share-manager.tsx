@@ -235,12 +235,6 @@ export default function ShareManagerScreen() {
       <Stack.Screen
         options={{
           title: device?.name ? `Compartir: ${device.name}` : 'Gestionar acceso',
-          presentation: 'modal',
-          headerStyle: { backgroundColor: '#000' },
-          headerTintColor: '#fff',
-          headerTitleStyle: { color: '#fff', fontWeight: '700' },
-          headerBlurEffect: 'dark',
-          headerTransparent: true,
           headerShadowVisible: false,
         }}
       />
