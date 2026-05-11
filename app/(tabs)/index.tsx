@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { memo } from 'react';
 import { FadeInDown, LinearTransition } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Device } from '@/src/types/device';
 
 interface DeviceItemProps {
@@ -49,7 +50,12 @@ const DeviceItem = memo(({ device, isSelected, toggleDeviceSelection, confirmDel
           className="p-5"
         >
           <View className="flex-row justify-between mb-4">
-            {renderBadge(device.type || 'light')}
+            <View className="flex-row gap-2 items-center">
+              {renderBadge(device.type || 'light')}
+              {device.isOwner === false && (
+                <Text className="bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-full text-[10px] font-bold">Compartido</Text>
+              )}
+            </View>
             <View
               className={`w-3 h-3 rounded-full ${device.isOnline ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`}
             />
@@ -72,34 +78,36 @@ const DeviceItem = memo(({ device, isSelected, toggleDeviceSelection, confirmDel
 
             <DeviceTelemetryDisplay deviceId={device.mac || deviceId} />
 
-            {/* Device Actions */}
-            <View className="flex-row gap-2 mt-2">
-              <Pressable
-                className="flex-1 bg-red-500/10 p-3 rounded-xl items-center justify-center flex-row gap-2 border border-red-500/20 active:bg-red-500/20"
-                style={{ borderCurve: 'continuous' }}
-                onPress={() => confirmDelete(deviceId, device.name)}
-                disabled={isDeleting}
-              >
-                <Feather name="trash-2" size={16} color="#ef4444" />
-              </Pressable>
+            {/* Device Actions — solo visibles para el propietario */}
+            {device.isOwner !== false && (
+              <View className="flex-row gap-2 mt-2">
+                <Pressable
+                  className="flex-1 bg-red-500/10 p-3 rounded-xl items-center justify-center flex-row gap-2 border border-red-500/20 active:bg-red-500/20"
+                  style={{ borderCurve: 'continuous' }}
+                  onPress={() => confirmDelete(deviceId, device.name)}
+                  disabled={isDeleting}
+                >
+                  <Feather name="trash-2" size={16} color="#ef4444" />
+                </Pressable>
 
-              <Pressable
-                className="flex-1 bg-blue-500/10 p-3 rounded-xl items-center justify-center flex-row gap-2 border border-blue-500/20 active:bg-blue-500/20"
-                style={{ borderCurve: 'continuous' }}
-                onPress={() => handleEdit(deviceId, device.name)}
-              >
-                <Feather name="edit-2" size={16} color="#3b82f6" />
-              </Pressable>
+                <Pressable
+                  className="flex-1 bg-blue-500/10 p-3 rounded-xl items-center justify-center flex-row gap-2 border border-blue-500/20 active:bg-blue-500/20"
+                  style={{ borderCurve: 'continuous' }}
+                  onPress={() => handleEdit(deviceId, device.name)}
+                >
+                  <Feather name="edit-2" size={16} color="#3b82f6" />
+                </Pressable>
 
-              <Pressable
-                className="flex-1 bg-green-500/10 p-3 rounded-xl items-center justify-center flex-row gap-2 border border-green-500/20 active:bg-green-500/20"
-                style={{ borderCurve: 'continuous' }}
-                onPress={() => handleShare(deviceId, device.name)}
-                disabled={isSharing}
-              >
-                <Feather name="share-2" size={16} color="#22c55e" />
-              </Pressable>
-            </View>
+                <Pressable
+                  className="flex-1 bg-green-500/10 p-3 rounded-xl items-center justify-center flex-row gap-2 border border-green-500/20 active:bg-green-500/20"
+                  style={{ borderCurve: 'continuous' }}
+                  onPress={() => handleShare(deviceId, device.name)}
+                  disabled={isSharing}
+                >
+                  <Feather name="share-2" size={16} color="#22c55e" />
+                </Pressable>
+              </View>
+            )}
 
           </Animated.View>
         )}
@@ -115,6 +123,7 @@ const DeviceItem = memo(({ device, isSelected, toggleDeviceSelection, confirmDel
 DeviceItem.displayName = 'DeviceItem';
 
 export default function Dashboard() {
+  const insets = useSafeAreaInsets();
   const {
     user,
     devices,
@@ -132,7 +141,12 @@ export default function Dashboard() {
     <ScrollView
       className="flex-1 bg-black"
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="p-6 gap-8 pb-32"
+      contentContainerStyle={{ 
+        paddingTop: insets.top + 24,
+        paddingBottom: insets.bottom + 120,
+        paddingHorizontal: 24,
+        gap: 32
+      }}
     >
       <View>
         <Text className="text-gray-400 text-lg font-medium">Welcome back,</Text>

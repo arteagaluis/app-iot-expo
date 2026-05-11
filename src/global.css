@@ -88,3 +88,9 @@
     --color-sf-bg: var(--sf-bg);
   }
 }
+
+/* Fix for white spaces on Web (iOS Safari) */
+html, body, #root {
+  background-color: #000000 !important;
+  overscroll-behavior: none;
+}

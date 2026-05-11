@@ -5,8 +5,10 @@ import { Animated } from '@/src/tw/animated';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const { user, logout } = useAuthStore();
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,12 @@ export default function ProfileScreen() {
     <ScrollView
       className="flex-1 bg-black"
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="p-8 gap-10"
+      contentContainerStyle={{ 
+        paddingTop: insets.top + 32,
+        paddingBottom: insets.bottom + 120,
+        paddingHorizontal: 32,
+        gap: 40
+      }}
     >
       <Animated.View
         entering={FadeInDown.duration(800).springify()}

@@ -9,6 +9,14 @@ export interface Device {
   room?: string;
   value?: string | number | boolean;
   unit?: string;
+  // Backend fields
+  ownerId?: string;
+  sharedWith?: string[];
+  status?: 'pending' | 'active' | 'inactive';
+  isOwner?: boolean; // true = propietario, false = acceso compartido
+  lastSeen?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ApiError {
