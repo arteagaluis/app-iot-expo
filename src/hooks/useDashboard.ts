@@ -162,42 +162,47 @@ export const useDashboard = (): UseDashboardReturn => {
     );
   };
 
-  const handleShare = useCallback((id: string, name: string) => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+  const handleShare = useCallback(
+    (id: string, name: string) => {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
 
-    const openManager = () => {
-      // Usamos encodeURIComponent por si el ID tiene caracteres como ':'
-      router.push(`/device/${encodeURIComponent(id)}/share-manager`);
-    };
+      const openManager = () => {
+        router.push(`/device/${encodeURIComponent(id)}/share-manager`);
+      };
 
-    // Si es iOS, mostramos el ActionSheet nativo
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: name,
-          message: 'Gestión de acceso compartido',
-          options: ['Cancelar', 'Gestionar usuarios y compartir'],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) openManager();
-        }
-      );
-      return;
-    }
+      // 1. Web
+      if (Platform.OS === 'web') {
+        const confirmed = window.confirm(`¿Deseas gestionar el acceso de "${name}"?`);
+        if (confirmed) openManager();
+        return;
+      }
 
-    // Android / Web: Alerta simple para navegar
-    Alert.alert(
-      name,
-      '¿Deseas gestionar el acceso de este dispositivo?',
-      [
+      // 2. iOS (ActionSheet Nativo)
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            title: name,
+            message: 'Gestión de acceso compartido',
+            options: ['Cancelar', 'Gestionar usuarios y compartir'],
+            cancelButtonIndex: 0,
+          },
+          (buttonIndex) => {
+            if (buttonIndex === 1) openManager();
+          }
+        );
+        return;
+      }
+
+      // 3. Android (Alerta Nativa)
+      Alert.alert(name, '¿Deseas gestionar el acceso de este dispositivo?', [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Gestionar acceso', onPress: openManager },
-      ]
-    );
-  }, [router]);
+      ]);
+    },
+    [router]
+  );
 
   const toggleDeviceSelection = (deviceId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
