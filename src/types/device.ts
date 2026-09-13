@@ -22,6 +22,7 @@ export interface Device {
   sharedWith?: SharedUser[] | string[]; // populated on detail, IDs on list
   status?: 'pending' | 'active' | 'inactive';
   isOwner?: boolean; // true = propietario, false = acceso compartido
+  relay?: number | boolean;
   lastSeen?: string;
   createdAt?: string;
   updatedAt?: string;

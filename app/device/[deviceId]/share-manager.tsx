@@ -1,24 +1,13 @@
 import { useDeviceDetail } from '@/src/hooks/useDeviceDetail';
-import { SharedUser } from '@/src/types/device';
 import { Pressable, Text, TextInput, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
+import { SharedUser } from '@/src/types/device';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import {
-  FadeIn,
-  FadeInDown,
-  FadeOut,
-  LinearTransition,
-} from 'react-native-reanimated';
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import { FadeIn, FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared User Row
@@ -114,7 +103,13 @@ function ShareInput({
   const handleSubmit = () => {
     const trimmed = email.trim();
     if (!trimmed || !trimmed.includes('@')) {
-      Alert.alert('Email inválido', 'Por favor ingresa un email válido.');
+      const title = 'Email inválido';
+      const msg = 'Por favor ingresa un email válido.';
+      if (Platform.OS === 'web') {
+        window.alert(`${title}: ${msg}`);
+      } else {
+        Alert.alert(title, msg);
+      }
       return;
     }
     if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -173,58 +168,77 @@ function ShareInput({
 export default function ShareManagerScreen() {
   const { deviceId } = useLocalSearchParams<{ deviceId: string }>();
   const router = useRouter();
-  const {
-    device,
-    isLoading,
-    isError,
-    sharedUsers,
-    shareMutation,
-    revokeMutation,
-  } = useDeviceDetail(deviceId);
+  const { device, isLoading, isError, sharedUsers, shareMutation, revokeMutation } =
+    useDeviceDetail(deviceId);
 
   const handleShare = (email: string) => {
     shareMutation.mutate(
       { targetEmail: email },
       {
         onSuccess: () => {
-          if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Alert.alert('¡Listo!', `Se invitó a ${email} al dispositivo.`);
+          if (Platform.OS === 'ios')
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          
+          const msg = `Se invitó a ${email} al dispositivo.`;
+          if (Platform.OS === 'web') {
+            window.alert(`¡Listo! ${msg}`);
+          } else {
+            Alert.alert('¡Listo!', msg);
+          }
         },
         onError: (error: any) => {
           const msg = error.response?.data?.message || 'No se pudo compartir el dispositivo.';
-          Alert.alert('Error', msg);
+          if (Platform.OS === 'web') {
+            window.alert(`Error: ${msg}`);
+          } else {
+            Alert.alert('Error', msg);
+          }
         },
       }
     );
   };
 
   const handleRevoke = (userId: string, userName: string) => {
-    Alert.alert(
-      'Revocar acceso',
-      `¿Quitar el acceso de ${userName} a este dispositivo?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
+    const message = `¿Quitar el acceso de ${userName} a este dispositivo?`;
+
+    const executeRevoke = () => {
+      if (Platform.OS === 'ios')
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      
+      revokeMutation.mutate(
+        { userId },
         {
-          text: 'Quitar acceso',
-          style: 'destructive',
-          onPress: () => {
-            if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            revokeMutation.mutate(
-              { userId },
-              {
-                onSuccess: () => {
-                  if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                },
-                onError: (error: any) => {
-                  const msg = error.response?.data?.message || 'No se pudo revocar el acceso.';
-                  Alert.alert('Error', msg);
-                },
-              }
-            );
+          onSuccess: () => {
+            if (Platform.OS === 'ios')
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
-        },
-      ]
-    );
+          onError: (error: any) => {
+            const msg = error.response?.data?.message || 'No se pudo revocar el acceso.';
+            if (Platform.OS === 'web') {
+              window.alert(`Error: ${msg}`);
+            } else {
+              Alert.alert('Error', msg);
+            }
+          },
+        }
+      );
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(message)) {
+        executeRevoke();
+      }
+      return;
+    }
+
+    Alert.alert('Revocar acceso', message, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Quitar acceso',
+        style: 'destructive',
+        onPress: executeRevoke,
+      },
+    ]);
   };
 
   return (
@@ -245,9 +259,8 @@ export default function ShareManagerScreen() {
           <ActivityIndicator size="large" color="#007AFF" />
           <Text className="text-gray-500 text-sm">Cargando dispositivo...</Text>
         </View>
-
-      /* ── Error ── */
-      ) : isError ? (
+      ) : /* ── Error ── */
+      isError ? (
         <View className="flex-1 items-center justify-center p-8 gap-5">
           <Text className="text-red-500 text-base font-semibold text-center">
             No se pudo cargar el dispositivo.
@@ -259,19 +272,15 @@ export default function ShareManagerScreen() {
             <Text className="text-white font-semibold">Volver</Text>
           </Pressable>
         </View>
-
-      /* ── Content ── */
       ) : (
+        /* ── Content ── */
         <FlatList
           data={sharedUsers}
           keyExtractor={(u) => u._id}
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 60 }}
           ListHeaderComponent={
-            <Animated.View
-              entering={FadeInDown.duration(400).springify()}
-              className="gap-6 mb-2"
-            >
+            <Animated.View entering={FadeInDown.duration(400).springify()} className="gap-6 mb-2">
               {/* Share input */}
               <ShareInput
                 deviceName={device?.name ?? 'dispositivo'}

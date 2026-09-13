@@ -76,7 +76,7 @@ const DeviceItem = memo(({ device, isSelected, toggleDeviceSelection, confirmDel
           <Animated.View entering={FadeInDown.springify().damping(18).stiffness(150)} className="px-5 pb-5 gap-3">
             <View className="h-[1px] w-full bg-blue-900/30 mb-2" />
 
-            <DeviceTelemetryDisplay deviceId={device.mac || deviceId} />
+            <DeviceTelemetryDisplay deviceId={device.deviceId || device.mac || deviceId} />
 
             {/* Device Actions — solo visibles para el propietario */}
             {device.isOwner !== false && (

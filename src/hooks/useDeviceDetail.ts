@@ -51,7 +51,9 @@ export const useDeviceDetail = (deviceId: string) => {
   // Revoke access from a user
   const revokeMutation = useMutation<void, AxiosError, { userId: string }>({
     mutationFn: async ({ userId }) => {
-      await apiClient.delete(`/devices/${deviceId}/share/${userId}`);
+      // Usamos encodeURIComponent por si el deviceId (MAC) tiene caracteres especiales
+      const url = `/devices/${encodeURIComponent(deviceId)}/share/${userId}`;
+      await apiClient.delete(url);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });

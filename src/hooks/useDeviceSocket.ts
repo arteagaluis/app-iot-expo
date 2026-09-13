@@ -6,6 +6,18 @@ import { useAuthStore } from '../stores/auth-store';
 
 let socket: Socket | null = null;
 
+export const sendCommand = (deviceId: string, command: Record<string, any>) => {
+  if (socket && socket.connected) {
+    socket.emit('device:command', { deviceId, command }, (response: any) => {
+      if (response?.status === 'error') {
+        console.error('Error enviando comando:', response.message);
+      }
+    });
+    return true;
+  }
+  return false;
+};
+
 export const useDeviceSocket = () => {
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.accessToken);
@@ -24,24 +36,39 @@ export const useDeviceSocket = () => {
     });
 
     // Escuchar el evento que manda NestJS cuando cambia el estado
-    socket.on('device:status', (payload: { deviceId: string; online: boolean; timestamp: string }) => {
+    socket.on('device:status', (payload: any) => {
       console.log('Actualización de estado recibida vía socket:', payload);
-      // Actualizamos la caché de TanStack Query en tiempo real
+      // Actualizamos la caché de dispositivos
       queryClient.setQueryData(['devices'], (oldData: any) => {
         if (!oldData) return oldData;
         return oldData.map((device: any) =>
           device.mac === payload.deviceId || device.deviceId === payload.deviceId || device._id === payload.deviceId
-            ? { ...device, isOnline: payload.online } 
+            ? { 
+                ...device, 
+                isOnline: payload.online !== undefined ? payload.online : device.isOnline,
+                relay: payload.relay !== undefined ? payload.relay : device.relay 
+              } 
             : device
         );
       });
+
+      // Si el payload contiene 'relay', actualizamos también la telemetría para que el componente se entere
+      if (payload.relay !== undefined) {
+        queryClient.setQueryData(['telemetry', payload.deviceId], (oldTelemetry: any) => ({
+          ...oldTelemetry,
+          relay: payload.relay
+        }));
+      }
     });
 
     socket.on('device:telemetry', (payload: { deviceId?: string; mac?: string; data: any }) => {
       console.log('Telemetría recibida vía socket:', payload);
       const targetId = payload.deviceId || payload.mac;
       if (targetId) {
-        queryClient.setQueryData(['telemetry', targetId], payload.data);
+        queryClient.setQueryData(['telemetry', targetId], (oldTelemetry: any) => ({
+          ...oldTelemetry,
+          ...payload.data
+        }));
       }
     });
 
